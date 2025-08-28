@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import React, { useState } from "react";
 
 export default function Homepage() {
   const [youtubeUrl, setYoutubeUrl] = useState("");
@@ -33,10 +33,10 @@ export default function Homepage() {
   };
 
   // Handle form submission
-  const handleSubmit = (e: any) => {
-    e.preventDefault();
-    fetchTranscript();
-  };
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  e.preventDefault();
+  fetchTranscript();
+}
 
   const copyToClipboard = () => {
     navigator.clipboard.writeText(transcript);
