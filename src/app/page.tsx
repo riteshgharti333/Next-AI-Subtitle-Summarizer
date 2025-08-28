@@ -1,5 +1,13 @@
 "use client";
 import { useState } from "react";
+import { 
+  FaFacebook, 
+  FaTwitter, 
+  FaWhatsapp, 
+  FaLinkedin, 
+  FaLink,
+  FaCopy
+} from "react-icons/fa";
 
 export default function Homepage() {
   const [youtubeUrl, setYoutubeUrl] = useState("");
@@ -7,6 +15,7 @@ export default function Homepage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [copied, setCopied] = useState(false);
+  const [linkCopied, setLinkCopied] = useState(false);
 
   const fetchTranscript = async () => {
     if (!youtubeUrl.trim()) return;
@@ -34,14 +43,46 @@ export default function Homepage() {
 
   // Handle form submission
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-  e.preventDefault();
-  fetchTranscript();
-}
+    e.preventDefault();
+    fetchTranscript();
+  }
 
   const copyToClipboard = () => {
     navigator.clipboard.writeText(transcript);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
+  };
+
+  const copyLinkToClipboard = () => {
+    navigator.clipboard.writeText("https://next-ai-subtitle-summarizer.vercel.app/");
+    setLinkCopied(true);
+    setTimeout(() => setLinkCopied(false), 2000);
+  };
+
+  // Function to share on social media
+  const shareOnSocialMedia = (platform: string) => {
+    const currentUrl = encodeURIComponent("https://next-ai-subtitle-summarizer.vercel.app/");
+    const title = encodeURIComponent("YouTube Subtitle Extractor - Get AI summaries of YouTube videos");
+    
+    let shareUrl = "";
+    switch(platform) {
+      case "facebook":
+        shareUrl = `https://www.facebook.com/sharer/sharer.php?u=${currentUrl}`;
+        break;
+      case "twitter":
+        shareUrl = `https://twitter.com/intent/tweet?url=${currentUrl}&text=${title}`;
+        break;
+      case "whatsapp":
+        shareUrl = `https://wa.me/?text=${title} ${currentUrl}`;
+        break;
+      case "linkedin":
+        shareUrl = `https://www.linkedin.com/sharing/share-offsite/?url=${currentUrl}`;
+        break;
+      default:
+        return;
+    }
+    
+    window.open(shareUrl, "_blank", "width=600,height=400");
   };
 
   return (
@@ -258,8 +299,59 @@ export default function Homepage() {
       </main>
 
       {/* Footer */}
-      <footer className="max-w-4xl mx-auto mt-8 md:mt-12 text-center text-gray-500 text-sm">
-        <p>
+      <footer className="max-w-4xl mx-auto mt-8 md:mt-12 text-center">
+        <div className="flex justify-center space-x-4 mb-4">
+          {/* Facebook Icon */}
+          <button 
+            onClick={() => shareOnSocialMedia("facebook")}
+            className="w-10 h-10 rounded-full bg-blue-600 hover:bg-blue-700 flex items-center justify-center transition-colors"
+            aria-label="Share on Facebook"
+          >
+            <FaFacebook className="w-5 h-5" />
+          </button>
+
+          {/* Twitter Icon */}
+          <button 
+            onClick={() => shareOnSocialMedia("twitter")}
+            className="w-10 h-10 rounded-full bg-blue-400 hover:bg-blue-500 flex items-center justify-center transition-colors"
+            aria-label="Share on Twitter"
+          >
+            <FaTwitter className="w-5 h-5" />
+          </button>
+
+          {/* WhatsApp Icon */}
+          <button 
+            onClick={() => shareOnSocialMedia("whatsapp")}
+            className="w-10 h-10 rounded-full bg-green-500 hover:bg-green-600 flex items-center justify-center transition-colors"
+            aria-label="Share on WhatsApp"
+          >
+            <FaWhatsapp className="w-5 h-5" />
+          </button>
+
+          {/* LinkedIn Icon */}
+          <button 
+            onClick={() => shareOnSocialMedia("linkedin")}
+            className="w-10 h-10 rounded-full bg-blue-700 hover:bg-blue-800 flex items-center justify-center transition-colors"
+            aria-label="Share on LinkedIn"
+          >
+            <FaLinkedin className="w-5 h-5" />
+          </button>
+
+          {/* Copy Link Icon */}
+          <button 
+            onClick={copyLinkToClipboard}
+            className="w-10 h-10 rounded-full bg-gray-600 hover:bg-gray-700 flex items-center justify-center transition-colors"
+            aria-label="Copy site link"
+          >
+            {linkCopied ? (
+              <FaCopy className="w-4 h-4 text-green-400" />
+            ) : (
+              <FaLink className="w-4 h-4" />
+            )}
+          </button>
+        </div>
+        
+        <p className="text-gray-500 text-sm">
           © {new Date().getFullYear()} YouTube Subtitle Extractor. Simply paste
           a link and get transcripts.
         </p>
