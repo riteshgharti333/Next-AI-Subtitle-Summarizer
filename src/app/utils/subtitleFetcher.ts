@@ -41,6 +41,12 @@ export async function getSubtitles(videoId: string, lang = "en"): Promise<Subtit
     throw new Error("YOUTUBE_API key is not set in env");
   }
 
+  console.log(YT_API_KEY);
+  
+
+   console.log("Fetching subtitles for video:", videoId);
+  
+
   if (!videoId || typeof videoId !== 'string') {
     throw new Error("Invalid video ID provided");
   }

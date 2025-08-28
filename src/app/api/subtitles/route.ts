@@ -14,6 +14,7 @@ function cleanMarkdown(text: string) {
 }
 
 export async function GET(req: NextRequest) {
+  console.log(apiKey)
   try {
     const { searchParams } = new URL(req.url);
     const link = searchParams.get("link");
