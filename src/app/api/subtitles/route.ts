@@ -1,4 +1,3 @@
-// app/api/subtitles/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import he from "he";
 import { GoogleGenerativeAI } from "@google/generative-ai";
@@ -10,7 +9,6 @@ if (!apiKey) throw new Error("❌ GEMINI_API_KEY is not set in .env.local");
 
 const genAI = new GoogleGenerativeAI(apiKey);
 
-// Utility: remove markdown
 function cleanMarkdown(text: string) {
   return text.replace(/[*_#>`]/g, "").trim();
 }
@@ -57,7 +55,7 @@ export async function GET(req: NextRequest) {
       `Summarize the following subtitles into clear, concise English bullet points:\n\n${text}`
     );
 
-    // ✅ Correct way to extract text
+    // Correct way to extract text
     const rawText =
       result.response.candidates?.[0]?.content?.parts?.[0]?.text || "";
 
