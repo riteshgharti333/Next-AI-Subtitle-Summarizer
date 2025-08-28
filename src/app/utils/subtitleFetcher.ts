@@ -14,9 +14,7 @@ export interface Subtitle {
 interface CaptionTrack {
   baseUrl?: string;
   languageCode?: string;
-  name?: {
-    simpleText?: string;
-  };
+  name?: { simpleText?: string };
 }
 
 interface PlayerCaptionsTracklistRenderer {
@@ -29,31 +27,61 @@ interface PlayerData {
   };
 }
 
+// Detect serverless environment
+const isServerless = !!(
+  process.env.VERCEL 
+);
+
 /**
- * Fetch YouTube subtitles (manual or auto-generated) for a video.
- * @param videoId YouTube video ID
- * @param lang Language code (default: "en")
- * @returns Array of subtitle objects
+ * Generate visitorData for serverless requests
+ */
+function generateVisitorData(): string {
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_';
+  let result = '';
+  for (let i = 0; i < 11; i++) {
+    result += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return result;
+}
+
+/**
+ * Generate session data for player request
+ */
+function generateSessionData() {
+  const visitorData = generateVisitorData();
+  return {
+    context: {
+      client: {
+        clientName: "WEB",
+        clientVersion: "2.20210721.00.00",
+      },
+      user: {
+        enableSafetyMode: false,
+      },
+      request: {
+        useSsl: true,
+      },
+    },
+    visitorData,
+  };
+}
+
+/**
+ * Fetch YouTube subtitles (manual or auto-generated)
  */
 export async function getSubtitles(videoId: string, lang = "en"): Promise<Subtitle[]> {
   if (!YT_API_KEY) {
-    console.error("YOUTUBE_API key is not set in environment variables");
-    throw new Error("YOUTUBE_API key is not set in env");
+    throw new Error("YOUTUBE_API key is not set in environment variables");
   }
 
-  console.log(YT_API_KEY);
-  
-
-   console.log("Fetching subtitles for video:", videoId);
-  
-
-  if (!videoId || typeof videoId !== 'string') {
+  if (!videoId || typeof videoId !== "string") {
     throw new Error("Invalid video ID provided");
   }
 
-  // Step 1: Get video player info
   const playerUrl = `https://www.youtube.com/youtubei/v1/player?key=${YT_API_KEY}`;
-  
+  const sessionData = generateSessionData();
+
+  // Step 1: Fetch player data
   let playerRes;
   try {
     playerRes = await fetch(playerUrl, {
@@ -62,86 +90,64 @@ export async function getSubtitles(videoId: string, lang = "en"): Promise<Subtit
         "Content-Type": "application/json",
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
         "Accept-Language": "en-US,en;q=0.9",
+        ...(isServerless && { "X-Goog-Visitor-Id": sessionData.visitorData }),
       },
-      body: JSON.stringify({
-        context: {
-          client: {
-            clientName: "WEB",
-            clientVersion: "2.20210721.00.00",
-          },
-        },
-        videoId,
-      }),
+      body: JSON.stringify({ ...sessionData, videoId }),
     });
 
     if (!playerRes.ok) {
       throw new Error(`YouTube API request failed: ${playerRes.status} ${playerRes.statusText}`);
     }
-  } catch (fetchError) {
-    const errorMessage = fetchError instanceof Error ? fetchError.message : 'Network error';
-    console.error("Failed to fetch player data:", errorMessage);
-    throw new Error(`Failed to fetch video data: ${errorMessage}`);
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : "Network error";
+    throw new Error(`Failed to fetch video data: ${msg}`);
   }
 
-  let playerData;
+  let playerData: PlayerData;
   try {
     playerData = await playerRes.json() as PlayerData;
-  } catch (parseError) {
-    console.error("Failed to parse player response:", parseError);
+  } catch (err) {
     throw new Error("Failed to parse YouTube response");
   }
 
   // Step 2: Extract captions
   try {
-    const captionTracks =
-      playerData.captions?.playerCaptionsTracklistRenderer?.captionTracks;
-
+    const captionTracks = playerData.captions?.playerCaptionsTracklistRenderer?.captionTracks;
     if (!captionTracks || !captionTracks.length) {
       throw new Error("No caption tracks found");
     }
 
-    // Pick requested language or fallback to first
-    const captionTrack =
-      captionTracks.find((track: CaptionTrack) => track.languageCode === lang) || captionTracks[0];
-
+    const captionTrack = captionTracks.find(track => track.languageCode === lang) || captionTracks[0];
     if (!captionTrack?.baseUrl) {
-      console.error("No valid caption URL found in track:", captionTrack);
-      throw new Error("No valid caption URL");
+      throw new Error("No valid caption URL found");
     }
 
-    let captionRes;
-    try {
-      captionRes = await fetch(captionTrack.baseUrl, {
-        headers: {
-          "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
-          Referer: `https://www.youtube.com/watch?v=${videoId}`,
-        },
-      });
+    const captionRes = await fetch(captionTrack.baseUrl, {
+      headers: {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+        "Referer": `https://www.youtube.com/watch?v=${videoId}`,
+        "Origin": "https://www.youtube.com",
+        ...(isServerless && { "X-Goog-Visitor-Id": sessionData.visitorData }),
+      },
+    });
 
-      if (!captionRes.ok) {
-        throw new Error(`Caption fetch failed: ${captionRes.status} ${captionRes.statusText}`);
-      }
-    } catch (captionError) {
-      const errorMessage = captionError instanceof Error ? captionError.message : 'Unknown error';
-      console.error("Failed to fetch captions:", errorMessage);
-      throw new Error(`Failed to fetch captions: ${errorMessage}`);
+    if (!captionRes.ok) {
+      throw new Error(`Caption fetch failed: ${captionRes.status} ${captionRes.statusText}`);
     }
 
     const captionXml = await captionRes.text();
 
-    // Parse captions
-    const matches = Array.from(
-      captionXml.matchAll(/<text start="(.*?)" dur="(.*?)">(.*?)<\/text>/g)
-    );
+    // Parse XML captions
+    const matches = Array.from(captionXml.matchAll(/<text start="(.*?)" dur="(.*?)">(.*?)<\/text>/g));
 
-    return matches.map((m) => ({
+    return matches.map(m => ({
       start: parseFloat(m[1]),
       dur: parseFloat(m[2]),
       text: he.decode(striptags(m[3])),
     }));
+
   } catch (err: unknown) {
-    const errorMessage = err instanceof Error ? err.message : 'Unknown error';
-    console.log("Fallback captions failed:", errorMessage);
+    console.error("Failed to fetch or parse captions:", err);
     return [];
   }
 }
