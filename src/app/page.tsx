@@ -1,12 +1,13 @@
 "use client";
 import { useState } from "react";
-import { 
-  FaFacebook, 
-  FaTwitter, 
-  FaWhatsapp, 
-  FaLinkedin, 
+import {
+  FaFacebook,
+  FaTwitter,
+  FaWhatsapp,
+  FaLinkedin,
   FaLink,
-  FaCopy
+  FaCopy,
+  FaLaptopCode,
 } from "react-icons/fa";
 
 export default function Homepage() {
@@ -45,7 +46,7 @@ export default function Homepage() {
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     fetchTranscript();
-  }
+  };
 
   const copyToClipboard = () => {
     navigator.clipboard.writeText(transcript);
@@ -54,18 +55,24 @@ export default function Homepage() {
   };
 
   const copyLinkToClipboard = () => {
-    navigator.clipboard.writeText("https://next-ai-subtitle-summarizer.vercel.app/");
+    navigator.clipboard.writeText(
+      "https://next-ai-subtitle-summarizer.vercel.app/"
+    );
     setLinkCopied(true);
     setTimeout(() => setLinkCopied(false), 2000);
   };
 
   // Function to share on social media
   const shareOnSocialMedia = (platform: string) => {
-    const currentUrl = encodeURIComponent("https://next-ai-subtitle-summarizer.vercel.app/");
-    const title = encodeURIComponent("YouTube Subtitle Extractor - Get AI summaries of YouTube videos");
-    
+    const currentUrl = encodeURIComponent(
+      "https://next-ai-subtitle-summarizer.vercel.app/"
+    );
+    const title = encodeURIComponent(
+      "YouTube Subtitle Extractor - Get AI summaries of YouTube videos"
+    );
+
     let shareUrl = "";
-    switch(platform) {
+    switch (platform) {
       case "facebook":
         shareUrl = `https://www.facebook.com/sharer/sharer.php?u=${currentUrl}`;
         break;
@@ -81,12 +88,12 @@ export default function Homepage() {
       default:
         return;
     }
-    
+
     window.open(shareUrl, "_blank", "width=600,height=400");
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 to-gray-800 text-white p-4 md:p-8">
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 to-gray-800 text-white p-2 md:p-8">
       {/* Header */}
       <header className="max-w-4xl mx-auto mb-8 md:mb-12 text-center">
         <div className="max-[480px]:flex-col flex items-center justify-center mb-3">
@@ -107,11 +114,12 @@ export default function Homepage() {
             </svg>
           </div>
           <h1 className="max-[480px]:mt-3 text-2xl md:text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-red-400 to-pink-500">
-            YouTube Subtitle Extractor
+            AI YouTube Subtitle Extractor
           </h1>
         </div>
         <p className="text-gray-400 text-sm md:text-base">
-          Extract and view subtitles from any YouTube video instantly
+          Instantly extract and summarize YouTube subtitles with AI for quick
+          insights.
         </p>
       </header>
 
@@ -242,7 +250,7 @@ export default function Homepage() {
                     d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
                   />
                 </svg>
-                Transcript
+                AI Transcript
               </h2>
               <button
                 onClick={copyToClipboard}
@@ -302,7 +310,7 @@ export default function Homepage() {
       <footer className="max-w-4xl mx-auto mt-8 md:mt-12 text-center">
         <div className="flex justify-center space-x-4 mb-4">
           {/* Facebook Icon */}
-          <button 
+          <button
             onClick={() => shareOnSocialMedia("facebook")}
             className="w-10 h-10 rounded-full bg-blue-600 hover:bg-blue-700 flex items-center justify-center transition-colors"
             aria-label="Share on Facebook"
@@ -311,7 +319,7 @@ export default function Homepage() {
           </button>
 
           {/* Twitter Icon */}
-          <button 
+          <button
             onClick={() => shareOnSocialMedia("twitter")}
             className="w-10 h-10 rounded-full bg-blue-400 hover:bg-blue-500 flex items-center justify-center transition-colors"
             aria-label="Share on Twitter"
@@ -320,7 +328,7 @@ export default function Homepage() {
           </button>
 
           {/* WhatsApp Icon */}
-          <button 
+          <button
             onClick={() => shareOnSocialMedia("whatsapp")}
             className="w-10 h-10 rounded-full bg-green-500 hover:bg-green-600 flex items-center justify-center transition-colors"
             aria-label="Share on WhatsApp"
@@ -329,7 +337,7 @@ export default function Homepage() {
           </button>
 
           {/* LinkedIn Icon */}
-          <button 
+          <button
             onClick={() => shareOnSocialMedia("linkedin")}
             className="w-10 h-10 rounded-full bg-blue-700 hover:bg-blue-800 flex items-center justify-center transition-colors"
             aria-label="Share on LinkedIn"
@@ -338,7 +346,7 @@ export default function Homepage() {
           </button>
 
           {/* Copy Link Icon */}
-          <button 
+          <button
             onClick={copyLinkToClipboard}
             className="w-10 h-10 rounded-full bg-gray-600 hover:bg-gray-700 flex items-center justify-center transition-colors"
             aria-label="Copy site link"
@@ -350,10 +358,19 @@ export default function Homepage() {
             )}
           </button>
         </div>
-        
+
         <p className="text-gray-500 text-sm">
-          © {new Date().getFullYear()} YouTube Subtitle Extractor. Simply paste
-          a link and get transcripts.
+          © {new Date().getFullYear()}  Instantly extract and summarize YouTube subtitles using AI. Get clear, concise, free, fast, and easy to use.
+          <br />
+          <a
+            href="https://rgdev-portfolio-six.vercel.app/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-2 text-[#06b6d4] hover:text-[#ec4899] transition-colors duration-300"
+          >
+            <FaLaptopCode className="text-lg transition-colors duration-300" />
+            <span className="hover:underline">Check my portfolio</span>
+          </a>
         </p>
       </footer>
     </div>
